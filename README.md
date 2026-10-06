@@ -12,10 +12,10 @@ community, using a local LLM (Qwen2.5-7B-Instruct via Ollama) with PhoBERT as a 
 
 | Step | Script | What it does |
 |---|---|---|
-| 1. crawl the feed | `crawl.py` | Scrolls the page through a logged-in Chrome (Playwright over the debug port), expands "Xem thêm", saves `posts.jsonl`. Reaches back to about #2017 (what the feed serves). |
-| 2. crawl older ids | `crawl_search.py` | Facebook search filtered to the page, one id at a time, for ids below the feed's reach. Skips known numbering gaps. |
-| 3. find shared ids | `crawl_v2.py`, `crawl_search_v2.py`, `recrawl_truncated.py` | **Ids are not unique on this page** (different posts reuse a number), so these keep every post keyed by *id + start of text* into `posts_v2.jsonl`. |
-| 4. merge | `merge_v2.py` | Folds v2 results into `posts.jsonl`: fuller text replaces truncated text, genuinely different posts become extra rows. Backs up first. `--dry-run` previews. |
+| 1. first pass | `crawl.py`, `crawl_search.py` | The original crawlers: scroll the feed (about #3691 down to #2017, which is as far as the feed serves) and search the page one id at a time below that. They assumed ids are unique, which they are not (see step 2), so they keep only the first post seen per id. |
+| 2. complete pass | `crawl_v2.py` | **Ids are not unique on this page** (about 350 ids are shared by two to five different posts), so this scrolls the feed and keeps every post, keyed by *id + start of text*, into `posts_v2.jsonl`. Plain `python crawl_v2.py` covers the newest posts down to #2017. To go below that, use the page's own date filter: `python crawl_v2.py --prepare 2023-09` opens the page and picks year/month in *Bộ lọc bài viết*, you click *Xong* yourself in that Chrome tab, then `python crawl_v2.py --use-open-tab --end-id 3` scrolls that tab down to #1 (about 20 minutes for #615 to #1). |
+| 3. fill gaps | `recrawl_truncated.py`, `crawl_search_v2.py` | Re-fetch posts that stayed truncated at "Xem thêm", and search individual ids (slower, about 17 s per id). `crawl_date.py` searches by date window but a single query word only returns about 60% of the posts, so it is kept for reference and not recommended. |
+| 4. merge | `merge_v2.py` | Folds `posts_v2.jsonl` into `posts.jsonl`: fuller text replaces truncated text, genuinely different posts become extra rows. Backs up first. `--dry-run` previews. |
 | 5. classify | `classify.py` | Cleans the text, labels it, writes `results.csv` and `report.html`. |
 
 `scripts/run_*.ps1` are silent supervisors that restart a crawl or the classifier if it crashes or stalls

@@ -2,6 +2,7 @@
 # makes no progress, and stops when it reaches the end of the feed. Everything is logged to recrawl_supervisor.log.
 Set-Location (Split-Path $PSScriptRoot -Parent)   # repo root, wherever it lives
 $py = (Resolve-Path ".venv\Scripts\python.exe").Path; $wd = (Get-Location).Path
+$scriptArgs = $args    # extra options for crawl_v2.py, e.g.  --goto 2023-09 --end-id 3
 $chrome = if ($env:CHROME_EXE) { $env:CHROME_EXE } else { "C:\Program Files\Google\Chrome\Application\chrome.exe" }
 $profileDir = if ($env:CHROME_PROFILE) { $env:CHROME_PROFILE } else { "C:\chrome_fb" }   # separate profile, log in to Facebook once
 $env:PYTHONIOENCODING = "utf-8"
@@ -20,7 +21,7 @@ function Count { if (Test-Path $out) { (Get-Content $out | Measure-Object -Line)
 Log "supervisor started"
 for ($a = 1; $a -le $maxAttempts; $a++) {
     if (-not (EnsureChrome)) { Log "attempt ${a}: Chrome will not start, waiting 2 min"; Start-Sleep 120; continue }
-    $p = Start-Process -FilePath $py -WorkingDirectory $wd -ArgumentList "-u", "crawl_v2.py" `
+    $p = Start-Process -FilePath $py -WorkingDirectory $wd -ArgumentList (@("-u", "crawl_v2.py") + $scriptArgs) `
         -RedirectStandardOutput $log -RedirectStandardError "$log.err" -WindowStyle Hidden -PassThru
     $h = $p.Handle                                   # keep the handle so ExitCode is readable
     $last = Count; $lastMove = Get-Date

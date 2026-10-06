@@ -61,6 +61,7 @@ def main():
         todo = todo[:args.limit]
     print(f"{len(todo)} ids to search, {len(best)} posts already in posts_v2.jsonl", flush=True)
     errors = searched = new_total = 0
+    prev_empty = False   # ids missing on the page come in runs: retry only the first empty one of a run
     with sync_playwright() as p:
         def new_page():
             return p.chromium.connect_over_cdp(args.cdp).contexts[0].new_page()
@@ -70,7 +71,7 @@ def main():
             cid = todo[i]
             try:
                 pairs, found = search_all(page, cid)
-                for _ in range(2):                    # empty can mean Chrome/Facebook was not ready: retry patiently
+                for _ in range(0 if prev_empty else 2):  # empty can mean Chrome/Facebook was not ready: retry patiently
                     if pairs:
                         break
                     time.sleep(10)
@@ -100,6 +101,7 @@ def main():
             with DONE.open("a") as f:
                 f.write(f"{cid}\n")
             i += 1; searched += 1; new_total += new
+            prev_empty = not pairs
             if searched % 80 == 0:               # fresh tab: a long-lived Facebook tab runs out of memory
                 try:
                     page.close(); page = new_page()

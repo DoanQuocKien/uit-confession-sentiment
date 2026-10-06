@@ -2,60 +2,62 @@
 1307-1355 known numbering gap (page jumped from #1306 to #1356)
 837-886 known numbering gap (page jumped from #836 to #887)
 760-779 known numbering gap (page jumped from #759 to #780)
-1991 not found by search
-1472 not found by search
-1455 not found by search
-1436 not found by search
-1435 not found by search
-1434 not found by search
-1294 not found by search
-1293 not found by search
-1292 not found by search
-1133 not found by search
-1115 not found by search
-1114 not found by search
-1113 not found by search
-1104 not found by search
-1103 not found by search
-1102 not found by search
-904 not found by search
-793 not found by search
-792 not found by search
-791 not found by search
-628 not found by search
-621 not found by search
-600 not found by search
-567 not found by search
-566 not found by search
-565 not found by search
-564 not found by search
-563 not found by search
-562 not found by search
-561 not found by search
-560 not found by search
-559 not found by search
-558 not found by search
-517 not found by search
-420 not found by search
-362 not found by search
-361 not found by search
-339 not found by search
-338 not found by search
-337 not found by search
-336 not found by search
-335 not found by search
-334 not found by search
-333 not found by search
-332 not found by search
-331 not found by search
-330 not found by search
-329 not found by search
-328 not found by search
-327 not found by search
-326 not found by search
-325 not found by search
-240-339 probable numbering gap (auto-detected, edges approximate)
-208 not found by search
-181 not found by search
-180 not found by search
-69 not found by search
+240-339 known numbering gap (page jumped from #239 to #340; confirmed by the date-ordered feed, which lists #1 to #615 without these)
+180 no post found in any crawl (searched by id and read from the date-ordered feed)
+181 no post found in any crawl (searched by id and read from the date-ordered feed)
+208 no post found in any crawl (searched by id and read from the date-ordered feed)
+361 no post found in any crawl (searched by id and read from the date-ordered feed)
+362 no post found in any crawl (searched by id and read from the date-ordered feed)
+517 no post found in any crawl (searched by id and read from the date-ordered feed)
+558 no post found in any crawl (searched by id and read from the date-ordered feed)
+559 no post found in any crawl (searched by id and read from the date-ordered feed)
+560 no post found in any crawl (searched by id and read from the date-ordered feed)
+561 no post found in any crawl (searched by id and read from the date-ordered feed)
+562 no post found in any crawl (searched by id and read from the date-ordered feed)
+563 no post found in any crawl (searched by id and read from the date-ordered feed)
+564 no post found in any crawl (searched by id and read from the date-ordered feed)
+565 no post found in any crawl (searched by id and read from the date-ordered feed)
+566 no post found in any crawl (searched by id and read from the date-ordered feed)
+567 no post found in any crawl (searched by id and read from the date-ordered feed)
+600 no post found in any crawl (searched by id and read from the date-ordered feed)
+621 no post found in any crawl (searched by id and read from the date-ordered feed)
+628 no post found in any crawl (searched by id and read from the date-ordered feed)
+791 no post found in any crawl (searched by id and read from the date-ordered feed)
+792 no post found in any crawl (searched by id and read from the date-ordered feed)
+793 no post found in any crawl (searched by id and read from the date-ordered feed)
+904 no post found in any crawl (searched by id and read from the date-ordered feed)
+1102 no post found in any crawl (searched by id and read from the date-ordered feed)
+1103 no post found in any crawl (searched by id and read from the date-ordered feed)
+1104 no post found in any crawl (searched by id and read from the date-ordered feed)
+1113 no post found in any crawl (searched by id and read from the date-ordered feed)
+1114 no post found in any crawl (searched by id and read from the date-ordered feed)
+1115 no post found in any crawl (searched by id and read from the date-ordered feed)
+1133 no post found in any crawl (searched by id and read from the date-ordered feed)
+1292 no post found in any crawl (searched by id and read from the date-ordered feed)
+1293 no post found in any crawl (searched by id and read from the date-ordered feed)
+1294 no post found in any crawl (searched by id and read from the date-ordered feed)
+1434 no post found in any crawl (searched by id and read from the date-ordered feed)
+1435 no post found in any crawl (searched by id and read from the date-ordered feed)
+1436 no post found in any crawl (searched by id and read from the date-ordered feed)
+1455 no post found in any crawl (searched by id and read from the date-ordered feed)
+1472 no post found in any crawl (searched by id and read from the date-ordered feed)
+1991 no post found in any crawl (searched by id and read from the date-ordered feed)
+2135 no post found in any crawl (searched by id and read from the date-ordered feed)
+2209 no post found in any crawl (searched by id and read from the date-ordered feed)
+2210 no post found in any crawl (searched by id and read from the date-ordered feed)
+2234 no post found in any crawl (searched by id and read from the date-ordered feed)
+2333 no post found in any crawl (searched by id and read from the date-ordered feed)
+2334 no post found in any crawl (searched by id and read from the date-ordered feed)
+2473 no post found in any crawl (searched by id and read from the date-ordered feed)
+2487 no post found in any crawl (searched by id and read from the date-ordered feed)
+2944 no post found in any crawl (searched by id and read from the date-ordered feed)
+3005 no post found in any crawl (searched by id and read from the date-ordered feed)
+3006 no post found in any crawl (searched by id and read from the date-ordered feed)
+3087 no post found in any crawl (searched by id and read from the date-ordered feed)
+3088 no post found in any crawl (searched by id and read from the date-ordered feed)
+3266 no post found in any crawl (searched by id and read from the date-ordered feed)
+3267 no post found in any crawl (searched by id and read from the date-ordered feed)
+3446 no post found in any crawl (searched by id and read from the date-ordered feed)
+3447 no post found in any crawl (searched by id and read from the date-ordered feed)
+3448 no post found in any crawl (searched by id and read from the date-ordered feed)
+3449 no post found in any crawl (searched by id and read from the date-ordered feed)
