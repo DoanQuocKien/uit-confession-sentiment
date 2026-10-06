@@ -1,0 +1,15 @@
+# Import with:  ollama create qwen2.5:7b-instruct -f Modelfile
+# Needs Qwen2.5-7B-Instruct-Q4_K_M.gguf next to this file (bartowski/Qwen2.5-7B-Instruct-GGUF on Hugging Face).
+# SHA-256 of the GGUF: 65b8fcd92af6b4fefa935c625d1ac27ea29dcb6ee14589c55a8f115ceaaa1423 (4,683,074,240 bytes)
+# A raw GGUF import does not pick up Qwen's ChatML template, so it is spelled out here.
+FROM ./Qwen2.5-7B-Instruct-Q4_K_M.gguf
+TEMPLATE """{{- range $i, $_ := .Messages }}
+{{- $last := eq (len (slice $.Messages $i)) 1 -}}
+<|im_start|>{{ .Role }}
+{{ .Content }}<|im_end|>
+{{ if $last }}<|im_start|>assistant
+{{ end }}
+{{- end }}"""
+PARAMETER stop "<|im_end|>"
+PARAMETER stop "<|im_start|>"
+PARAMETER temperature 0

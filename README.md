@@ -49,7 +49,7 @@ chrome.exe --remote-debugging-port=9222 --user-data-dir=C:\chrome_fb
 ```
 
 Classification needs [Ollama](https://ollama.com) with the model imported (a GGUF plus a ChatML `TEMPLATE`
-in a Modelfile) or, alternatively, an Anthropic API key for `--engine claude` (copy `.env.example` to `.env`).
+in the `Modelfile` in this repo) or, alternatively, an Anthropic API key for `--engine claude` (copy `.env.example` to `.env`).
 
 ```powershell
 .venv\Scripts\python classify.py --sample 30     # try 30 posts first
