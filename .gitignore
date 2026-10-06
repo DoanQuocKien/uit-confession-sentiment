@@ -1,0 +1,22 @@
+# secrets and environment
+.env
+.venv/
+__pycache__/
+fb_profile/
+
+# scraped data and derived files: posts contain real people's names, contacts and personal
+# stories, so the data is NOT published. Regenerate it with the scripts.
+posts*.jsonl
+dup_candidates.jsonl
+llm_cache*.jsonl
+results*.csv
+report*.html
+search_v2_done.txt
+search_v2_empty.txt
+batch_id*.txt
+
+# logs, temp files, local backups and scratch
+*.log
+*.log.err
+*.tmp
+archive/
