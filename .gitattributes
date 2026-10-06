@@ -1,2 +1,2 @@
-# Ollama must read the Modelfile with LF line endings (CRLF would put stray  into the chat template)
+# Ollama must read the Modelfile with LF line endings: CRLF would put stray carriage returns into the chat template
 Modelfile text eol=lf
