@@ -1,4 +1,6 @@
 from crawl import clean_text, extract_id, is_truncated, split_confessions
+from crawl_v2 import key
+from update import find_new
 
 assert clean_text("hỏi ạ\n#UITconfessions: bit.ly/UITConfessions Ẩn bớt") == "hỏi ạ"
 assert clean_text("hỏi ạ #UITconfessions: bit.ly/UITConfession") == "hỏi ạ"
@@ -17,4 +19,13 @@ assert split_confessions("#3686\nfirst\n-------------\n#3687\nsecond") == [("368
 assert split_confessions("no id here") == []
 assert split_confessions("#1: first one\n#2: second one") == [("1", "first one"), ("2", "second one")]
 assert split_confessions("#5\nreply to #3 here: ok") == [("5", "reply to #3 here: ok")]
+
+# update.find_new: newest-first feed; stops after a run of already-known posts; ignores repeats
+known = {key(str(i), f"post {i}") for i in range(1, 40)}
+feed = [("42", "post 42"), ("41", "post 41"), ("41", "post 41"), ("40", "post 40")] + [(str(i), f"post {i}") for i in range(39, 0, -1)]
+new, reached = find_new(feed, known, stop_after=5)
+assert new == [("42", "post 42"), ("41", "post 41"), ("40", "post 40")] and reached
+assert find_new([("5", "post 5")] * 3, known, stop_after=5) == ([], False)          # fewer known posts than the stop run
+assert find_new([("77", "brand new")], known)[0] == [("77", "brand new")]
+assert key("9", "post   9 Ẩn bớt") == key("9", "post 9")                           # page furniture does not make a post "new"
 print("ok")

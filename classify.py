@@ -207,6 +207,25 @@ function draw(){const q=document.getElementById("q").value.toLowerCase(),f=docum
 </script></html>"""
 
 
+def result_row(p, c, phobert_label):
+    """One line of results.csv for post `p` with LLM result `c` ({"label", "reason"})."""
+    return {"confession_id": p["confession_id"], "post_url": p["post_url"], "text": p["text"],
+            "llm_label": c["label"], "llm_reason": c["reason"], "phobert_label": phobert_label,
+            "agree": c["label"] == phobert_label, "truncated": p["truncated"]}
+
+
+def write_outputs(rows, sfx=""):
+    """results.csv (opens in Excel) + the static report.html; written to a temp file first, then swapped in."""
+    tmp = Path(f"results{sfx}.csv.tmp")
+    with open(tmp, "w", encoding="utf-8-sig", newline="") as f:
+        w = csv.DictWriter(f, fieldnames=list(rows[0]))
+        w.writeheader()
+        w.writerows(rows)
+    tmp.replace(f"results{sfx}.csv")
+    data = json.dumps(rows, ensure_ascii=False).replace("</", "<\\/")
+    Path(f"report{sfx}.html").write_text(HTML.replace("__DATA__", data), encoding="utf-8")
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--engine", choices=["ollama", "claude"], default="ollama")
@@ -224,18 +243,8 @@ def main():
     else:
         cl = claude_labels(posts, Path(f"batch_id{sfx}.txt"))
     ph = phobert_labels(posts)
-    rows = []
-    for i, p in enumerate(posts):
-        c = cl.get(i, {"label": "error", "reason": "missing"})
-        rows.append({"confession_id": p["confession_id"], "post_url": p["post_url"], "text": p["text"],
-                     "llm_label": c["label"], "llm_reason": c["reason"], "phobert_label": ph[i],
-                     "agree": c["label"] == ph[i], "truncated": p["truncated"]})
-    with open(f"results{sfx}.csv", "w", encoding="utf-8-sig", newline="") as f:
-        w = csv.DictWriter(f, fieldnames=list(rows[0]))
-        w.writeheader()
-        w.writerows(rows)
-    data = json.dumps(rows, ensure_ascii=False).replace("</", "<\\/")
-    Path(f"report{sfx}.html").write_text(HTML.replace("__DATA__", data), encoding="utf-8")
+    rows = [result_row(p, cl.get(i, {"label": "error", "reason": "missing"}), ph[i]) for i, p in enumerate(posts)]
+    write_outputs(rows, sfx)
     print("llm    ", counts(rows, "llm_label"))
     print("phobert", counts(rows, "phobert_label"))
     print(f"agreement {sum(r['agree'] for r in rows) / len(rows):.0%}")

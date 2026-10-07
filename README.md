@@ -21,6 +21,24 @@ community, using a local LLM (Qwen2.5-7B-Instruct via Ollama) with PhoBERT as a 
 `scripts/run_*.ps1` are silent supervisors that restart a crawl or the classifier if it crashes or stalls
 (everything logs to `*_supervisor.log`). `missing.txt` lists the numbering gaps and ids not found.
 
+### Keeping it up to date
+```powershell
+.venv\Scripts\python update.py check    # look at the top of the feed: how many posts are new? (changes nothing)
+.venv\Scripts\python update.py run      # fetch them, add them to posts.jsonl, label them, update results.csv
+```
+`update.py` scrolls the feed from the newest post until it meets 15 posts it already has, so it is quick. It starts
+Chrome (debug port, logged-in profile) and Ollama itself if they are not running; if they are not at their default
+locations set `CHROME_EXE` / `OLLAMA_EXE`. `run` also labels any post that is in `posts.jsonl` but not yet in
+`results.csv`, so an interrupted run is finished by the next one.
+
+### Viewer
+```powershell
+.venv\Scripts\python ui.py              # opens http://127.0.0.1:8765
+```
+A single-page viewer for `results.csv`: posts with the LLM label and reason, PhoBERT's label, filters by label,
+"PhoBERT disagrees" and "shared ids", accent-insensitive search (`thang may` finds `thang máy`), sorting and paging.
+It re-reads `results.csv` when the file changes, so new posts appear after a reload. It listens on this machine only.
+
 ### Text cleaning (`crawl.clean_text`)
 Removes page furniture found by counting repeated lines over all posts: the `#UITconfessions: bit.ly/...`
 hashtag/link, the `Ẩn bớt` button text, `-----` separators, lone `.` lines and a trailing `… Xem thêm`.
