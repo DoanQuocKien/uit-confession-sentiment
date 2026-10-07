@@ -1,0 +1,9 @@
+[client]
+toolbarMode = "minimal"          # no Deploy button
+
+[browser]
+gatherUsageStats = false
+
+[server]
+headless = true                  # start.bat opens the browser itself
+address = "127.0.0.1"            # this machine only: the data contains personal information

@@ -29,15 +29,19 @@ community, using a local LLM (Qwen2.5-7B-Instruct via Ollama) with PhoBERT as a 
 `update.py` scrolls the feed from the newest post until it meets 15 posts it already has, so it is quick. It starts
 Chrome (debug port, logged-in profile) and Ollama itself if they are not running; if they are not at their default
 locations set `CHROME_EXE` / `OLLAMA_EXE`. `run` also labels any post that is in `posts.jsonl` but not yet in
-`results.csv`, so an interrupted run is finished by the next one.
+`results.csv`, so an interrupted run is finished by the next one, and it repairs posts stored cut off at "Xem thêm"
+(looked up by id in the page's search, or in the feed for the newest posts) before labeling them.
 
-### Viewer
-```powershell
-.venv\Scripts\python ui.py              # opens http://127.0.0.1:8765
-```
-A single-page viewer for `results.csv`: posts with the LLM label and reason, PhoBERT's label, filters by label,
-"PhoBERT disagrees" and "shared ids", accent-insensitive search (`thang may` finds `thang máy`), sorting and paging.
-It re-reads `results.csv` when the file changes, so new posts appear after a reload. It listens on this machine only.
+### Viewer and one-click update (Streamlit)
+Double-click `start.bat` (or run `.venv\Scripts\streamlit run app.py`). It opens http://localhost:8501 with two tabs:
+
+- **Posts**: every post with the LLM label and reason, PhoBERT's label, filters by label, "PhoBERT disagrees" and
+  "shared ids", accent-insensitive search (`thang may` finds `thang máy`), sorting and paging. It re-reads
+  `results.csv` when the file changes.
+- **Update**: *Check for new posts* and *Fetch and classify new posts* run `update.py` and show its output live.
+
+The server listens on this machine only (the data contains personal information). Machine-specific paths
+(`OLLAMA_EXE`, `OLLAMA_MODELS`, `CHROME_EXE`, `CHROME_PROFILE`) go in `local_env.bat`, which `start.bat` loads and git ignores.
 
 ### Text cleaning (`crawl.clean_text`)
 Removes page furniture found by counting repeated lines over all posts: the `#UITconfessions: bit.ly/...`

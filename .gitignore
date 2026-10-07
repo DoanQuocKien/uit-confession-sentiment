@@ -20,3 +20,4 @@ batch_id*.txt
 *.log.err
 *.tmp
 archive/
+local_env.bat

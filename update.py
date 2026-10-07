@@ -78,6 +78,31 @@ def ensure_ollama():
     ensure(OLLAMA + "/api/version", [os.environ.get("OLLAMA_EXE", "ollama"), "serve"], "Ollama")
 
 
+def expand_all(page):
+    """Click every "Xem thêm", then wait until no visible post is still cut off (a slow connection needs the wait)."""
+    for _ in range(8):
+        n = page.evaluate(EXPAND_JS)
+        time.sleep(2 if n else 1)
+        if not any(is_truncated(b) for post in page.evaluate(READ_JS) for _, b in split_confessions(post)):
+            return
+
+
+def scan_feed(page, max_scrolls=20):
+    """Complete, expanded posts from the top of the feed: {key: (id, text)}."""
+    page.goto(PAGE_URL, wait_until="domcontentloaded", timeout=90000)
+    time.sleep(8)
+    out = {}
+    for _ in range(max_scrolls):
+        expand_all(page)
+        for post in page.evaluate(READ_JS):
+            for cid, body in split_confessions(post):
+                if body and not is_truncated(body):
+                    out[key(cid, body)] = (cid, body)
+        page.mouse.wheel(0, 1800)
+        time.sleep(random.uniform(1.5, 3))
+    return out
+
+
 def fetch_new(known, max_scrolls=60):
     """Scroll the feed from the newest post down until we reach posts we already have."""
     from playwright.sync_api import sync_playwright
@@ -90,11 +115,7 @@ def fetch_new(known, max_scrolls=60):
         time.sleep(8)
         idle = 0
         for _ in range(max_scrolls):
-            for _ in range(3):                           # expand "Xem thêm" until nothing is left to expand
-                n = page.evaluate(EXPAND_JS)
-                time.sleep(1.5 if n else 0.3)
-                if not n:
-                    break
+            expand_all(page)
             grew = False
             for post in page.evaluate(READ_JS):
                 for cid, body in split_confessions(post):
@@ -113,16 +134,72 @@ def fetch_new(known, max_scrolls=60):
     return new, reached
 
 
+def pick_full(cid, truncated_text, pairs):
+    """The complete version of a truncated post among search results `pairs` ({key: (id, body)}), or None.
+    Several different posts can share an id, so the one whose start matches the truncated text is chosen."""
+    from merge_v2 import same_post, stem
+    s = stem(truncated_text)
+    for c, body in pairs.values():
+        if c == cid and not is_truncated(body) and len(stem(body)) >= len(s) and same_post(s, stem(body)):
+            return body
+    return None
+
+
+def truncated_count():
+    return sum(is_truncated(r["text"]) for r in map(json.loads, POSTS.read_text(encoding="utf-8").splitlines()) if r["text"])
+
+
+def repair_truncated():
+    """Look up every stored post that ended at "Xem thêm" by id in the page's search and swap in the full text."""
+    rows = [json.loads(l) for l in POSTS.read_text(encoding="utf-8").splitlines() if l]
+    bad = [r for r in rows if is_truncated(r["text"])]
+    if not bad:
+        return 0
+    from playwright.sync_api import sync_playwright
+    from crawl_search_v2 import search_all
+    ensure_chrome()
+    fixed = 0
+    with sync_playwright() as p:
+        page = p.chromium.connect_over_cdp(CDP).contexts[0].new_page()
+        left = []
+        for r in bad:
+            for attempt in range(3):                     # an empty result is often just Facebook being slow
+                pairs, _ = search_all(page, r["confession_id"])
+                if pairs:
+                    break
+                time.sleep(10)
+            full = pick_full(r["confession_id"], r["text"], pairs)
+            if full:
+                r["text"], fixed = full, fixed + 1
+            else:
+                left.append(r)
+        if left:                                         # the newest posts may not be in the search index yet: use the feed
+            feed = scan_feed(page)
+            for r in left:
+                full = pick_full(r["confession_id"], r["text"], feed)
+                if full:
+                    r["text"], fixed = full, fixed + 1
+        page.close()
+    if fixed:
+        tmp = POSTS.with_suffix(".jsonl.tmp")
+        tmp.write_text("".join(json.dumps(r, ensure_ascii=False) + "\n" for r in rows), encoding="utf-8")
+        tmp.replace(POSTS)
+    print(f"truncated posts: {len(bad)} found, {fixed} repaired" + ("" if fixed == len(bad) else f", {len(bad) - fixed} still cut off"), flush=True)
+    return fixed
+
+
 def process(new):
-    """Add `new` to posts.jsonl, then label every post that is not in results.csv yet."""
+    """Add `new` to posts.jsonl, repair truncated posts, then label every post that is not in results.csv yet."""
     if new:
         with POSTS.open("a", encoding="utf-8") as f:
             for cid, body in reversed(new):              # oldest first, so the file stays roughly in id order
                 f.write(json.dumps({"confession_id": cid, "post_url": None, "text": body}, ensure_ascii=False) + "\n")
+    repair_truncated()
     import classify
     posts = classify.load_posts()
     results = Path("results.csv")
     old = list(csv.DictReader(open(results, encoding="utf-8-sig"))) if results.exists() else []
+    old = [r for r in old if r["truncated"] != "True"]   # a label made from cut-off text is redone (cache hit if it still is)
     have = {key(r["confession_id"], r["text"]) for r in old}
     todo = [p for p in posts if key(p["confession_id"], p["text"]) not in have]
     if not todo:
@@ -149,8 +226,12 @@ def main():
           ("" if reached else "  (warning: did not reach posts we already have; try a higher --max-scrolls)"))
     if args.command == "run":
         process(new)
-    elif new:
-        print("run `python update.py run` to add and label them")
+    else:
+        cut = truncated_count()
+        if cut:
+            print(f"{cut} stored post(s) are cut off at \"Xem thêm\"; `run` repairs them")
+        if new:
+            print("run `python update.py run` to add and label them")
 
 
 if __name__ == "__main__":

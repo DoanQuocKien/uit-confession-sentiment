@@ -1,6 +1,6 @@
 from crawl import clean_text, extract_id, is_truncated, split_confessions
 from crawl_v2 import key
-from update import find_new
+from update import find_new, pick_full
 
 assert clean_text("hỏi ạ\n#UITconfessions: bit.ly/UITConfessions Ẩn bớt") == "hỏi ạ"
 assert clean_text("hỏi ạ #UITconfessions: bit.ly/UITConfession") == "hỏi ạ"
@@ -28,4 +28,11 @@ assert new == [("42", "post 42"), ("41", "post 41"), ("40", "post 40")] and reac
 assert find_new([("5", "post 5")] * 3, known, stop_after=5) == ([], False)          # fewer known posts than the stop run
 assert find_new([("77", "brand new")], known)[0] == [("77", "brand new")]
 assert key("9", "post   9 Ẩn bớt") == key("9", "post 9")                           # page furniture does not make a post "new"
+# update.pick_full: of several posts sharing an id, the complete one whose start matches the truncated text
+full_a = "Mình muốn hỏi về lịch học kỳ này " * 6
+full_b = "Một bài khác hẳn dùng chung số này " * 6
+pairs = {"1": ("12", full_b), "2": ("12", full_a), "3": ("13", full_a)}
+assert pick_full("12", full_a[:90] + "… Xem thêm", pairs) == full_a
+assert pick_full("12", "Chẳng giống bài nào cả… Xem thêm", pairs) is None
+assert pick_full("12", full_a[:90] + "… Xem thêm", {"1": ("12", full_a[:90] + "… Xem thêm")}) is None   # still cut off: not a fix
 print("ok")

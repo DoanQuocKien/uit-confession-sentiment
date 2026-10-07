@@ -3,3 +3,5 @@ anthropic
 transformers
 torch
 pyvi
+streamlit
+pandas
