@@ -12,7 +12,6 @@ community, using a local LLM (Qwen2.5-7B-Instruct via Ollama) with PhoBERT as a 
 
 No Facebook account, GPU or model is needed for this. Without the real data the viewer shows **12 invented sample
 posts** (`demo/sample_results.csv`) so every feature (search, filters, label counts, PhoBERT disagreement) can be tried.
-The **Update** tab needs the full setup below (a logged-in Chrome and Ollama).
 
 > **The scraped data is not included.** The posts contain real people's names, contact details and personal
 > stories, and scraping Facebook may violate its terms of service. This repo is code only; run the
@@ -24,7 +23,7 @@ The **Update** tab needs the full setup below (a logged-in Chrome and Ollama).
 2. **Clean** the text and **keep every post**: confession numbers are not unique on this page, so posts are keyed by id + start of text.
 3. **Classify** each post as positive / negative / neutral about UIT with a local LLM (Qwen2.5-7B-Instruct on Ollama,
    JSON-schema output, temperature 0), plus a one-line reason. PhoBERT gives a cheap second opinion.
-4. **View and update** in a Streamlit app: browse and filter the results, or fetch and label only the new posts.
+4. **View** the results in a small web page: search, filter by label, read the reason for each label.
 
 Result on the real page: about 3,350 posts (#1 to #3691, with documented numbering gaps).
 
@@ -32,7 +31,7 @@ Result on the real page: about 3,350 posts (#1 to #3691, with documented numberi
 
 | File | Role |
 |---|---|
-| `start.bat`, `app.py` | double-click launcher and the Streamlit viewer / updater |
+| `start.bat`, `app.py` | double-click launcher and the viewer |
 | `crawl.py`, `crawl_v2.py`, `crawl_search*.py`, `recrawl_truncated.py`, `merge_v2.py` | crawling and merging (see Pipeline) |
 | `classify.py`, `Modelfile` | cleaning, LLM + PhoBERT labeling, `results.csv` and `report.html` |
 | `update.py` | incremental update: find new posts, repair truncated ones, label them |
@@ -64,16 +63,11 @@ locations set `CHROME_EXE` / `OLLAMA_EXE`. `run` also labels any post that is in
 `results.csv`, so an interrupted run is finished by the next one, and it repairs posts stored cut off at "Xem thêm"
 (looked up by id in the page's search, or in the feed for the newest posts) before labeling them.
 
-### Viewer and one-click update (Streamlit)
-Double-click `start.bat` (or run `.venv\Scripts\streamlit run app.py`). It opens http://localhost:8501 with two tabs:
-
-- **Posts**: every post with the LLM label and reason, PhoBERT's label, filters by label, "PhoBERT disagrees" and
-  "shared ids", accent-insensitive search (`thang may` finds `thang máy`), sorting and paging. It re-reads
-  `results.csv` when the file changes.
-- **Update**: *Check for new posts* and *Fetch and classify new posts* run `update.py` and show its output live.
-
-The server listens on this machine only (the data contains personal information). Machine-specific paths
-(`OLLAMA_EXE`, `OLLAMA_MODELS`, `CHROME_EXE`, `CHROME_PROFILE`) go in `local_env.bat`, which `start.bat` loads and git ignores.
+### Viewer
+Double-click `start.bat` (or run `.venv\Scripts\streamlit run app.py`). It shows every post with its label and the
+reason for it, with search (accents optional, `#123` jumps to a number), label filters and paging. It re-reads
+`results.csv` when the file changes and listens on this machine only (the data contains personal information).
+Machine-specific paths (`OLLAMA_EXE`, `OLLAMA_MODELS`, `CHROME_EXE`, `CHROME_PROFILE`) go in `local_env.bat`, which git ignores.
 
 ### Text cleaning (`crawl.clean_text`)
 Removes page furniture found by counting repeated lines over all posts: the `#UITconfessions: bit.ly/...`

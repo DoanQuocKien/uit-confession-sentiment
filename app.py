@@ -1,23 +1,24 @@
-"""UIT Confession: browse the posts and their classifications, and fetch + classify new posts with one click.
+"""UIT Confession: browse every confession and how it feels about the school.
 
 Run:  streamlit run app.py      (or double-click start.bat)
-Tab "Posts" reads results.csv; tab "Update" runs update.py (check / run) and shows its output live.
+Reads results.csv; if it is missing, shows a few invented sample posts instead.
 """
-import html, os, subprocess, sys, unicodedata
+import html
+import unicodedata
 from pathlib import Path
 
 import pandas as pd
 import streamlit as st
 
-from update import CDP, OLLAMA, truncated_count, up
-
 ROOT = Path(__file__).parent
 RESULTS = ROOT / "results.csv"
 DEMO = ROOT / "demo" / "sample_results.csv"      # invented posts, shown when the real results.csv is absent
 LABELS = ["positive", "neutral", "negative"]
-COLOR = {"positive": "green", "neutral": "gray", "negative": "red", "error": "orange"}
+NAMES = {"positive": "Positive", "neutral": "Neutral", "negative": "Negative"}
+COLOR = {"positive": "green", "neutral": "gray", "negative": "red"}
 
-st.set_page_config(page_title="UIT Confession", page_icon="💬", layout="wide")
+st.set_page_config(page_title="UIT Confession", page_icon="💬", layout="centered")
+st.markdown("<style>.block-container{max-width:820px;padding-top:2.5rem}</style>", unsafe_allow_html=True)
 
 
 def fold(s):
@@ -36,48 +37,38 @@ def load(path, mtime):
     return df
 
 
-def card(r, query):
+def card(r):
     with st.container(border=True):
-        head = f"**#{r.confession_id}** &nbsp; :{COLOR.get(r.llm_label, 'gray')}-background[**{r.llm_label}**] &nbsp; "
-        head += f":gray[PhoBERT: {r.phobert_label}{'' if r.agree else ' ≠'}]"
-        if r.shared > 1:
-            head += f" &nbsp; :violet[id shared by {r.shared}]"
-        if r.truncated:
-            head += " &nbsp; :orange[truncated]"
-        st.markdown(head, unsafe_allow_html=True)
-        text = r.text
-        body = lambda t: "<div style='word-break:break-word'>" + html.escape(t).replace("\n", "<br>") + "</div>"
-        if len(text) > 500:
-            st.markdown(body(text[:500].rstrip()) + "…", unsafe_allow_html=True)
-            with st.expander("Show the whole post"):
-                st.markdown(body(text), unsafe_allow_html=True)
-        else:
-            st.markdown(body(text), unsafe_allow_html=True)
-        st.caption(f"💬 {r.llm_reason}")
+        st.markdown(f"**#{r.confession_id}** &nbsp; :{COLOR.get(r.llm_label, 'gray')}-background[**{NAMES.get(r.llm_label, r.llm_label)}**]")
+        st.markdown("<div style='word-break:break-word'>" + html.escape(r.text).replace("\n", "<br>") + "</div>", unsafe_allow_html=True)
+        st.caption(f"Why: {r.llm_reason}")
 
 
-def posts_tab():
+def main():
+    st.title("UIT Confession")
+    st.write("Every confession from the page, and whether it speaks well, badly or neutrally of the school.")
     if not RESULTS.exists():
-        st.info("**Demo mode.** `results.csv` is not here (the real data is not published), so these are "
-                "**invented sample posts**. Run `classify.py` to build the real table.")
+        st.info("These are **invented sample posts** so you can try the viewer. The real posts are not included, "
+                "because they contain real people's personal details.")
     src = RESULTS if RESULTS.exists() else DEMO
     df = load(src, src.stat().st_mtime)
     n = len(df)
     counts = df["llm_label"].value_counts()
-    cols = st.columns(4)
-    cols[0].metric("Posts", f"{n:,}", help=f"{df['confession_id'].nunique():,} distinct ids")
-    for c, label in zip(cols[1:], LABELS):
-        c.metric(label.capitalize(), f"{counts.get(label, 0):,}")
-        c.caption(f"{100 * counts.get(label, 0) / n:.0f}% of posts")
 
-    c1, c2, c3, c4 = st.columns([3, 2, 1.3, 1.3])
-    query = c1.text_input("Search", placeholder="text or #id; accents optional", label_visibility="collapsed")
-    chosen = c2.multiselect("Label", LABELS, default=LABELS, label_visibility="collapsed")
-    only_dis = c3.checkbox("PhoBERT disagrees")
-    only_shared = c4.checkbox("Shared ids")
-    c5, c6 = st.columns([1, 1])
-    newest_first = c5.selectbox("Order", ["ID ascending", "ID descending"], label_visibility="collapsed") == "ID descending"
-    per = c6.selectbox("Per page", [10, 25, 50], index=1, label_visibility="collapsed")
+    cols = st.columns(4)
+    cols[0].metric("Confessions", f"{n:,}")
+    for c, label in zip(cols[1:], LABELS):
+        c.metric(NAMES[label], f"{counts.get(label, 0):,}")
+        c.caption(f"{100 * counts.get(label, 0) / n:.0f}% of all")
+
+    query = st.text_input("Search", placeholder="Search the posts, or type a number like #123 (accents are optional)",
+                          label_visibility="collapsed")
+    c1, c2 = st.columns([3, 2])
+    chosen = c1.multiselect("Show", LABELS, default=LABELS, format_func=NAMES.get)
+    order = c2.selectbox("Order", ["Oldest first", "Newest first"])
+    with st.expander("More filters"):
+        only_dis = st.checkbox("Only posts where a second reader (PhoBERT) disagreed")
+        only_shared = st.checkbox("Only numbers used by more than one post")
 
     view = df[df["llm_label"].isin(chosen)]
     if only_dis:
@@ -87,59 +78,17 @@ def posts_tab():
     q = query.strip()
     if q:
         view = view[view["confession_id"] == q.lstrip("#")] if q.startswith("#") else view[view["_f"].str.contains(fold(q), regex=False)]
-    view = view.sort_values("id", ascending=not newest_first, kind="stable")
+    view = view.sort_values("id", ascending=order == "Oldest first", kind="stable")
 
+    per = 20
     pages = max(1, -(-len(view) // per))
-    sig = hash((q, tuple(chosen), only_dis, only_shared, newest_first, per))      # a new filter starts on page 1 again
-    page = st.number_input(f"Page (of {pages})", 1, pages, 1, key=f"page-{sig}") if pages > 1 else 1
-    st.caption(f"{len(view):,} post(s)" + (f", showing {(page - 1) * per + 1}-{min(page * per, len(view))}" if len(view) else ""))
+    sig = hash((q, tuple(chosen), only_dis, only_shared, order))      # a new search starts on page 1 again
+    page = st.number_input(f"Page (1 to {pages})", 1, pages, 1, key=f"page-{sig}") if pages > 1 else 1
+    st.caption(f"{len(view):,} confession(s) found" if len(view) else "")
     if view.empty:
-        st.info("No posts match.")
+        st.info("Nothing matches. Try fewer words or another filter.")
     for r in view.iloc[(page - 1) * per: page * per].itertuples():
-        card(r, q)
+        card(r)
 
 
-def run_update(command):
-    """Run `update.py <command>` and show its output as it arrives; returns the exit code."""
-    env = {**os.environ, "PYTHONIOENCODING": "utf-8"}
-    proc = subprocess.Popen([sys.executable, "-u", str(ROOT / "update.py"), command], cwd=ROOT, env=env, text=True,
-                            encoding="utf-8", errors="replace", stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-    box, lines = st.empty(), []
-    noisy = ("Warning", "warn", "symlink", "HF_TOKEN", "Loading weights", "developer mode", "[GIN]")
-    for line in proc.stdout:
-        if line.strip() and not any(s in line for s in noisy):
-            lines.append(line.rstrip())
-            box.code("\n".join(lines[-25:]), language=None)
-    return proc.wait()
-
-
-def update_tab():
-    df = load(RESULTS, RESULTS.stat().st_mtime) if RESULTS.exists() else None
-    a, b, c = st.columns(3)
-    a.metric("Posts labeled", f"{len(df):,}" if df is not None else "0")
-    b.metric("Chrome (Facebook login)", "running" if up(CDP + "/json/version") else "starts when needed")
-    c.metric("Ollama (the model)", "running" if up(OLLAMA + "/api/version") else "starts when needed")
-    cut = truncated_count() if Path("posts.jsonl").exists() else 0
-    if cut:
-        st.warning(f"{cut} stored post(s) are cut off at \"Xem thêm\"; **Fetch and classify** repairs them.")
-    st.write("**Check** looks at the newest posts on the page and says how many are new. **Fetch and classify** adds them, "
-             "labels them and updates the results (a few minutes; Chrome and Ollama start themselves if needed).")
-    x, y = st.columns(2)
-    check = x.button("🔎 Check for new posts", use_container_width=True)
-    fetch = y.button("⬇️ Fetch and classify new posts", type="primary", use_container_width=True)
-    if check or fetch:
-        with st.spinner("Working... (this tab is busy until it finishes)"):
-            code = run_update("check" if check else "run")
-        if code == 0:
-            st.success("Done." + (" Open the Posts tab to see the new posts." if fetch else ""))
-        else:
-            st.error(f"update.py stopped with exit code {code}; see the output above.")
-
-
-st.title("UIT Confession: posts and classifications")
-st.caption("Sentiment of each confession toward the school (UIT, VNU-HCM), labeled by a local LLM with PhoBERT as a second opinion.")
-tab_posts, tab_update = st.tabs(["Posts", "Update"])
-with tab_posts:
-    posts_tab()
-with tab_update:
-    update_tab()
+main()
