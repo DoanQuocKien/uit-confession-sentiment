@@ -4,9 +4,41 @@ Collects the posts of the **UIT Confession** Facebook page (University of Inform
 VNU-HCM) and labels each confession **positive / negative / neutral** about the school and its
 community, using a local LLM (Qwen2.5-7B-Instruct via Ollama) with PhoBERT as a second opinion.
 
-> **Data is not included.** The posts contain real people's names, contact details and personal
+## Quick start (to look at the project)
+
+1. Install [Python 3.10+](https://www.python.org/downloads/) (tick "Add to PATH").
+2. **Double-click `start.bat`.** The first time it creates `.venv` and installs the viewer's two packages
+   (streamlit, pandas); then your browser opens http://localhost:8501.
+
+No Facebook account, GPU or model is needed for this. Without the real data the viewer shows **12 invented sample
+posts** (`demo/sample_results.csv`) so every feature (search, filters, label counts, PhoBERT disagreement) can be tried.
+The **Update** tab needs the full setup below (a logged-in Chrome and Ollama).
+
+> **The scraped data is not included.** The posts contain real people's names, contact details and personal
 > stories, and scraping Facebook may violate its terms of service. This repo is code only; run the
 > pipeline yourself, on your own account, and mind the privacy of the people in the data.
+
+## What it does
+
+1. **Crawl** the page with Playwright, driving a Chrome you log in to yourself (Facebook gives no API for this).
+2. **Clean** the text and **keep every post**: confession numbers are not unique on this page, so posts are keyed by id + start of text.
+3. **Classify** each post as positive / negative / neutral about UIT with a local LLM (Qwen2.5-7B-Instruct on Ollama,
+   JSON-schema output, temperature 0), plus a one-line reason. PhoBERT gives a cheap second opinion.
+4. **View and update** in a Streamlit app: browse and filter the results, or fetch and label only the new posts.
+
+Result on the real page: about 3,350 posts (#1 to #3691, with documented numbering gaps).
+
+## Files
+
+| File | Role |
+|---|---|
+| `start.bat`, `app.py` | double-click launcher and the Streamlit viewer / updater |
+| `crawl.py`, `crawl_v2.py`, `crawl_search*.py`, `recrawl_truncated.py`, `merge_v2.py` | crawling and merging (see Pipeline) |
+| `classify.py`, `Modelfile` | cleaning, LLM + PhoBERT labeling, `results.csv` and `report.html` |
+| `update.py` | incremental update: find new posts, repair truncated ones, label them |
+| `test_crawl.py` | `python test_crawl.py` checks the parsing helpers (prints `ok`) |
+| `demo/sample_results.csv` | invented posts for the demo mode |
+| `scripts/*.ps1` | self-restarting supervisors for long crawls |
 
 ## Pipeline
 

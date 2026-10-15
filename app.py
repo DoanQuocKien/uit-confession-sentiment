@@ -13,6 +13,7 @@ from update import CDP, OLLAMA, truncated_count, up
 
 ROOT = Path(__file__).parent
 RESULTS = ROOT / "results.csv"
+DEMO = ROOT / "demo" / "sample_results.csv"      # invented posts, shown when the real results.csv is absent
 LABELS = ["positive", "neutral", "negative"]
 COLOR = {"positive": "green", "neutral": "gray", "negative": "red", "error": "orange"}
 
@@ -26,9 +27,9 @@ def fold(s):
 
 
 @st.cache_data(show_spinner=False)
-def load(mtime):
-    """results.csv as a table; `mtime` is the cache key, so the data reloads when the file changes."""
-    df = pd.read_csv(RESULTS, encoding="utf-8-sig", dtype={"confession_id": str}, keep_default_na=False)
+def load(path, mtime):
+    """The results table; `mtime` is part of the cache key, so the data reloads when the file changes."""
+    df = pd.read_csv(path, encoding="utf-8-sig", dtype={"confession_id": str}, keep_default_na=False)
     df["id"] = pd.to_numeric(df["confession_id"], errors="coerce")
     df["shared"] = df.groupby("confession_id")["confession_id"].transform("size")
     df["_f"] = (df["text"] + " " + df["llm_reason"]).map(fold)
@@ -57,9 +58,10 @@ def card(r, query):
 
 def posts_tab():
     if not RESULTS.exists():
-        st.warning("results.csv not found. Run `python classify.py` first.")
-        return
-    df = load(RESULTS.stat().st_mtime)
+        st.info("**Demo mode.** `results.csv` is not here (the real data is not published), so these are "
+                "**invented sample posts**. Run `classify.py` to build the real table.")
+    src = RESULTS if RESULTS.exists() else DEMO
+    df = load(src, src.stat().st_mtime)
     n = len(df)
     counts = df["llm_label"].value_counts()
     cols = st.columns(4)
@@ -112,7 +114,7 @@ def run_update(command):
 
 
 def update_tab():
-    df = load(RESULTS.stat().st_mtime) if RESULTS.exists() else None
+    df = load(RESULTS, RESULTS.stat().st_mtime) if RESULTS.exists() else None
     a, b, c = st.columns(3)
     a.metric("Posts labeled", f"{len(df):,}" if df is not None else "0")
     b.metric("Chrome (Facebook login)", "running" if up(CDP + "/json/version") else "starts when needed")
@@ -135,6 +137,7 @@ def update_tab():
 
 
 st.title("UIT Confession: posts and classifications")
+st.caption("Sentiment of each confession toward the school (UIT, VNU-HCM), labeled by a local LLM with PhoBERT as a second opinion.")
 tab_posts, tab_update = st.tabs(["Posts", "Update"])
 with tab_posts:
     posts_tab()

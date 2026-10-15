@@ -1,0 +1,13 @@
+﻿confession_id,post_url,text,llm_label,llm_reason,phobert_label,agree,truncated
+1,,Cảm ơn thầy cô khoa MMT&TT đã hướng dẫn tận tình trong đồ án vừa rồi. Mình thấy tự hào khi học ở UIT!,positive,Praise and gratitude toward lecturers and pride in UIT.,positive,True,False
+2,,"Có bạn nào biết thang máy toà A hay hỏng không? Sáng nào mình cũng phải leo 6 tầng, mệt quá.",negative,Complaint about a facility problem at UIT.,negative,True,False
+3,,Cho mình hỏi nên chọn thầy A hay thầy B cho môn Cấu trúc dữ liệu học kỳ này ạ?,neutral,A plain question about choosing a lecturer.,neutral,True,False
+4,,"Mình nhặt được một cái thẻ sinh viên ở căn tin, ai mất thì liên hệ mình nhé.",neutral,"Lost-and-found notice, no stance toward UIT.",positive,False,False
+5,,"Đăng ký học phần lúc nào cũng sập server, năm nào cũng vậy. Nhà trường làm ơn nâng cấp hệ thống đi.",negative,Anger about the registration system failing every term.,negative,True,False
+6,,"Crush mình học cùng lớp Lập trình hướng đối tượng, hay cười lắm. Ai biết cách làm quen không ạ?",positive,"Friendly, light-hearted social post about a classmate.",positive,True,False
+7,,"Hôm nay câu lạc bộ tổ chức workshop về AI vui lắm, các anh chị chia sẻ rất nhiệt tình.",positive,Enjoyed a student club event; warm tone toward the community.,positive,True,False
+8,,"Deadline dồn dập, mình stress quá không biết có theo nổi ngành này không.",negative,Stress about workload in UIT life.,negative,True,False
+9,,Mình muốn hỏi thủ tục xin giấy xác nhận sinh viên ở phòng nào và mấy giờ làm việc?,neutral,Practical question about a procedure.,neutral,True,False
+9,,Có ai bán lại giáo trình Giải tích 1 không ạ? Mình trả giá hợp lý.,neutral,Buying a textbook; unrelated to attitude toward UIT.,neutral,True,False
+10,,"Bảo vệ cổng trường rất thân thiện, hôm trước còn giúp mình tìm lại chìa khoá xe.",positive,Kindness from staff.,positive,True,False
+11,,"Thái độ của một bạn trong nhóm đồ án thật sự khiến mình thất vọng, bỏ mặc cả nhóm gần ngày nộp.",negative,Bad behavior of a student in UIT life.,negative,True,False
