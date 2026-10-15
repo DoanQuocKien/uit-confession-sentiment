@@ -9,6 +9,7 @@ from pathlib import Path
 
 import pandas as pd
 import streamlit as st
+import streamlit.components.v1 as components
 
 ROOT = Path(__file__).parent
 RESULTS = ROOT / "results.csv"
@@ -90,17 +91,20 @@ def main():
     def pager(where):
         a, b, c = where.columns([1, 2, 1])
         if a.button("← Previous", disabled=page <= 1, key=f"prev-{where is st}", use_container_width=True):
-            st.session_state.page = page - 1
+            st.session_state.page, st.session_state.to_top = page - 1, True
             st.rerun()
         b.markdown(f"<div style='text-align:center;padding-top:.4rem'>Page {page} of {pages} &nbsp;·&nbsp; {len(view):,} confessions</div>",
                    unsafe_allow_html=True)
         if c.button("Next →", disabled=page >= pages, key=f"next-{where is st}", use_container_width=True):
-            st.session_state.page = page + 1
+            st.session_state.page, st.session_state.to_top = page + 1, True
             st.rerun()
 
     if view.empty:
         st.info("Nothing matches. Try fewer words or another filter.")
         return
+    if st.session_state.pop("to_top", False):      # came from Previous/Next: start the new page at the top
+        components.html("<script>const m=window.parent.document.querySelector('[data-testid=stMain]');"
+                        "if(m)m.scrollTo(0,0);</script>", height=0)
     pager(st)
     for r in view.iloc[(page - 1) * per: page * per].itertuples():
         card(r)
