@@ -98,8 +98,15 @@ chrome.exe --remote-debugging-port=9222 --user-data-dir=C:\chrome_fb
 .venv\Scripts\python crawl.py --cdp http://localhost:9222
 ```
 
-Classification needs [Ollama](https://ollama.com) with the model imported (a GGUF plus a ChatML `TEMPLATE`
-in the `Modelfile` in this repo) or, alternatively, an Anthropic API key for `--engine claude` (copy `.env.example` to `.env`).
+Classification needs a model. **The viewer does not**: it only reads the finished `results.csv`. Two options:
+
+- **Local Qwen (free, needs about 6 GB of GPU memory or patience on CPU).** Install [Ollama](https://ollama.com), then in this folder:
+  ```powershell
+  curl.exe -L -o Qwen2.5-7B-Instruct-Q4_K_M.gguf https://huggingface.co/bartowski/Qwen2.5-7B-Instruct-GGUF/resolve/main/Qwen2.5-7B-Instruct-Q4_K_M.gguf
+  ollama create qwen2.5:7b-instruct -f Modelfile
+  ```
+  The download is 4.7 GB (SHA-256 is in the `Modelfile`); it is a one-time step.
+- **Claude API.** Copy `.env.example` to `.env`, put your key in it, and run `classify.py --engine claude`.
 
 ```powershell
 .venv\Scripts\python classify.py --sample 30     # try 30 posts first
