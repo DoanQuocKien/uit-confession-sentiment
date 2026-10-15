@@ -1,5 +1,7 @@
 # UIT Confession: crawl and sentiment classification
 
+Course project for **CS232 - Introduction to Multimedia Computing**.
+
 Collects the posts of the **UIT Confession** Facebook page (University of Information Technology,
 VNU-HCM) and labels each confession **positive / negative / neutral** about the school and its
 community, using a local LLM (Qwen2.5-7B-Instruct via Ollama) with PhoBERT as a second opinion.

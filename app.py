@@ -83,12 +83,30 @@ def main():
     per = 20
     pages = max(1, -(-len(view) // per))
     sig = hash((q, tuple(chosen), only_dis, only_shared, order))      # a new search starts on page 1 again
-    page = st.number_input(f"Page (1 to {pages})", 1, pages, 1, key=f"page-{sig}") if pages > 1 else 1
-    st.caption(f"{len(view):,} confession(s) found" if len(view) else "")
+    if st.session_state.get("sig") != sig:
+        st.session_state.sig, st.session_state.page = sig, 1
+    page = min(st.session_state.page, pages)
+
+    def pager(where):
+        a, b, c = where.columns([1, 2, 1])
+        if a.button("← Previous", disabled=page <= 1, key=f"prev-{where is st}", use_container_width=True):
+            st.session_state.page = page - 1
+            st.rerun()
+        b.markdown(f"<div style='text-align:center;padding-top:.4rem'>Page {page} of {pages} &nbsp;·&nbsp; {len(view):,} confessions</div>",
+                   unsafe_allow_html=True)
+        if c.button("Next →", disabled=page >= pages, key=f"next-{where is st}", use_container_width=True):
+            st.session_state.page = page + 1
+            st.rerun()
+
     if view.empty:
         st.info("Nothing matches. Try fewer words or another filter.")
+        return
+    pager(st)
     for r in view.iloc[(page - 1) * per: page * per].itertuples():
         card(r)
+    top = st.container()
+    pager(top)
+    st.caption("CS232 - Introduction to Multimedia Computing")
 
 
 main()
